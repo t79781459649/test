@@ -1,0 +1,101 @@
+tokens:
+  SERVICE_CONNECTION:
+    service_connection: default-service-connection # Имя сервисного подключения в SourceCraft. Замените при необходимости.
+    scope: org
+
+on:
+  push:
+    - workflows: gatsby-deploy
+      filter:
+        branches: main
+
+workflows:
+  gatsby-deploy:
+    env:
+      DOMAIN_NAME: <<YOUR_DOMAIN_NAME>> # Замените на ваше доменное имя (например: my-site.example.com)
+    tasks:
+      - name: gatsby-deploy
+        cubes:
+          # ШАГ 1: Получение IAM-токена Yandex Cloud
+          # Кубик обменивает токен SourceCraft на IAM-токен Yandex Cloud
+          # и сохраняет его в переменную IAM_TOKEN в блоке outputs
+          - name: get-iam-token
+            env:
+              ID_TOKEN: ${{ tokens.SERVICE_CONNECTION.id_token }}
+              YC_SA_ID: ${{ tokens.SERVICE_CONNECTION.service_account_id }}
+            image: cr.yandex/sourcecraft/yc-iam:latest
+
+          # ШАГ 2: Получение ключей доступа к S3 из Yandex Lockbox
+          # Извлекает секреты для доступа к Object Storage на основе доменного имени
+          - name: get-s3-keys
+            image: cr.yandex/sourcecraft/yc-cli:latest
+            env:
+              YC_IAM_TOKEN: ${{ cubes.get-iam-token.outputs.IAM_TOKEN }}
+              YC_FOLDER_ID: ${{ tokens.SERVICE_CONNECTION.folder_id }}
+            script:
+              - |
+                echo "🔧 Настройка Yandex Cloud CLI..."
+                yc config set folder-id $YC_FOLDER_ID
+
+                echo "🔍 Поиск секретов для домена: $DOMAIN_NAME"
+                export DOMAIN_LABEL=${DOMAIN_NAME//./-}
+                echo "📋 Лейбл домена: $DOMAIN_LABEL"
+
+                echo "🔐 Поиск секрета в Yandex Lockbox..."
+                export SECRET_ID=$(yc lockbox secret list --jq ".[] | select(.labels[\"domain-name\"] == \"$DOMAIN_LABEL\") | .id")
+
+                if [ -z "$SECRET_ID" ]; then
+                  echo "❌ Секрет для домена $DOMAIN_LABEL не найден!"
+                  exit 1
+                fi
+
+                echo "✅ Найден секрет с ID: $SECRET_ID"
+
+                echo "🔑 Получение ключей доступа к S3..."
+                echo "S3_ACCESS_KEY_ID=$(yc lockbox payload get --id $SECRET_ID --key access_key)" >> $SOURCECRAFT_OUTPUT
+                echo "S3_SECRET_ACCESS_KEY=$(yc lockbox payload get --id $SECRET_ID --key secret_key)" >> $SOURCECRAFT_OUTPUT
+                echo "✅ Ключи S3 успешно получены и сохранены"
+
+          # ШАГ 3: Установка зависимостей Node.js
+          # Устанавливает npm зависимости для Gatsby проекта
+          - name: install-dependencies
+            image: node:18-alpine
+            script:
+              - |
+                echo "📦 Установка зависимостей Node.js..."
+                npm ci
+                echo "✅ Зависимости успешно установлены"
+
+          # ШАГ 4: Сборка и развертывание Gatsby сайта
+          # Собирает статический сайт и загружает его в Object Storage
+          - name: gatsby-build-deploy
+            image: node:18-alpine
+            env:
+              AWS_ACCESS_KEY_ID: ${{ cubes.get-s3-keys.outputs.S3_ACCESS_KEY_ID }}
+              AWS_SECRET_ACCESS_KEY: ${{ cubes.get-s3-keys.outputs.S3_SECRET_ACCESS_KEY }}
+              AWS_REGION: ru-central1
+              AWS_ENDPOINT_URL: https://storage.yandexcloud.net
+            script:
+              - |
+                echo "🏗️  Начинаем сборку Gatsby сайта..."
+
+                echo "📦 Сборка сайта..."
+                npm run build
+
+                if [ $? -eq 0 ]; then
+                  echo "✅ Сборка завершена успешно"
+                else
+                  echo "❌ Ошибка при сборке сайта"
+                  exit 1
+                fi
+
+                echo "🚀 Развертывание..."
+                npm run deploy
+
+                if [ $? -eq 0 ]; then
+                  echo "🎉 Развертывание завершено успешно!"
+                  echo "🌐 Сайт доступен по адресу: https://$DOMAIN_NAME"
+                else
+                  echo "❌ Ошибка при развертывании"
+                  exit 1
+                fi
