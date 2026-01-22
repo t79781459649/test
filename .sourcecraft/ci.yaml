@@ -12,7 +12,7 @@ on:
 workflows:
   gatsby-deploy:
     env:
-      DOMAIN_NAME: <<YOUR_DOMAIN_NAME>> # Замените на ваше доменное имя (например: my-site.example.com)
+      DOMAIN_NAME: roses-crimea
     tasks:
       - name: gatsby-deploy
         cubes:
