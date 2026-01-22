@@ -1,6 +1,6 @@
 tokens:
   SERVICE_CONNECTION:
-    service_connection: default-service-connection # Имя сервисного подключения в SourceCraft. Замените при необходимости.
+    service_connection: service-connection-2
     scope: org
 
 on:
