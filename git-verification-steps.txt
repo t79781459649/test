@@ -1,0 +1,47 @@
+Последовательность команд для проверки настроек Git:
+
+1. Проверка настроек пользователя:
+   cd C:\Users\Anna_A\Documents\Projects\cloudapp-gatsby
+   git config --local user.name
+   git config --local user.email
+
+2. Проверка настроек credential helper:
+   git config --local credential.helper
+
+3. Проверка URL вместо:
+   git config --local url."https://oauth2:".insteadOf
+
+4. Проверка текущего состояния репозитория:
+   git status
+
+5. Проверка удаленного репозитория:
+   git remote -v
+
+6. Проверка возможности подключения (тестовая операция):
+   git ls-remote origin
+
+7. Проверка настроек глобального Git конфига:
+   git config --global user.name
+   git config --global user.email
+
+8. Проверка наличия сохраненных учетных данных:
+   type C:\Users\Anna_A\Documents\Projects\cloudapp-gatsby\.git-credentials
+
+9. Проверка содержимого локального Git конфига:
+   type C:\Users\Anna_A\Documents\Projects\cloudapp-gatsby\.gitconfig
+
+10. Запуск VSCode через созданный скрипт:
+    C:\Users\Anna_A\Documents\Projects\cloudapp-gatsby\start-vscode.bat
+
+Если все настройки корректны, то при выполнении команд вы увидите:
+- Вывод ваших настроек имени и email
+- Вывод "store" для credential.helper
+- Вывод URL вместо для SourceCraft
+- Статус репозитория без ошибок
+- Список удаленных репозиториев
+- Успешное подключение к удаленному репозиторию
+
+Если при выполнении команд возникают ошибки, проверьте:
+- Правильность путей к файлам
+- Наличие прав доступа к файлам
+- Корректность токена в файле .git-credentials

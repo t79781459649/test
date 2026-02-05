@@ -1,0 +1,7 @@
+[user]
+	name = t145
+	email = t79781459649@yandex.ru
+[credential]
+	helper = store
+[url "https://oauth2:"]
+	insteadOf = https://git.sourcecraft.dev/

@@ -1,0 +1,11 @@
+{
+  "extensions.autoUpdate": false,
+  "extensions.autoCheckUpdates": false,
+  "telemetry.enableTelemetry": false,
+  "github.copilot.enable": {
+    "*": true
+  },
+  "sourcecraft.assistant.enabled": true,
+  "sourcecraft.assistant.model": "default",
+  "sourcecraft.assistant.autoStart": true
+}

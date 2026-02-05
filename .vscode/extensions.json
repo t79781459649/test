@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "sourcecraft.sourcecraft-assistant",
+    "rooveterinaryinc.roo-cline",
+    "github.copilot",
+    "ms-vscode.vscode-typescript-next",
+    "ms-vscode.vscode-json",
+    "ms-vscode.vscode-html",
+    "ms-vscode.vscode-css"
+  ]
+}

@@ -12,7 +12,7 @@ on:
 workflows:
   gatsby-deploy:
     env:
-      DOMAIN_NAME: roses-crimea
+      DOMAIN_NAME: roses-gatsby-new.site
     tasks:
       - name: gatsby-deploy
         cubes:
